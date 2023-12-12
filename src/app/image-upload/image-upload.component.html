@@ -1,0 +1,126 @@
+<section class="gradient-custom">
+    <div class="container py-5 h-100">
+
+        <!-- Search by image title or tag -->
+        <div class="input-group mb-4 searchFilter">
+            <input type="text" id="txtSearch" class="form-control" placeholder="Search by image title or tag"
+                (keyup)="searchFilter($event)">
+            <div class="input-group-append">
+                <button class="btn btn-secondary" id="btnAddImage" (click)="openAddModal()" type="button"
+                    title="Add Image" data-bs-toggle="modal" data-bs-target="#addImageForm">
+                    <i class="fa fa-plus"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Display loader-->
+        <div *ngIf="isLoader" class="loader">
+            <img src="../../assets/loader.gif">
+        </div>
+
+        <!-- Display Image Grid-->
+        <div *ngIf="!isRecord && !isLoader">
+            <ngx-masonry [options]="masonryOptions" [updateLayout]="imageList" class="gallery-content" infiniteScroll
+                [infiniteScrollThrottle]="50" [infiniteScrollDistance]="2" (scrolled)="onScroll()"
+                [scrollWindow]="false" [ordered]="true">
+                <div ngxMasonryItem class="masonry-item" *ngFor="let item of imageList">
+                    <img src="{{item.path}}" [width]='250' title="{{item.title}}">
+                </div>
+            </ngx-masonry>
+        </div>
+
+        <!-- No Rocords Found Message-->
+        <div *ngIf="isRecord">
+            <div class="empty-state">
+                <div class="empty-state__content">
+                    <div class="empty-state__icon">
+                        <img src="../../assets/NoRecord.png" alt="No Records Found">
+                    </div>
+                    <div class="empty-state__message">No Records Found.</div>
+                    <div class="empty-state__help">
+                        Add a new record by simpley clicking the button on top right side.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Add Image Popup Modal-->
+<div class="modal fade" id="addImageForm" role="dialog" data-bs-backdrop="static" aria-labelledby="addImageFormTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Image</h5>
+                <button type="button" id="btnClose" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                    (click)="closeModal()"></button>
+            </div>
+            <div class="modal-body">
+                <form id="saveForm" [formGroup]="GalleryImage">
+                    <!-- Title input -->
+                    <div class="form-outline mb-4">
+                        <label class="form-label fw-bold required" for="txtTitle">Title</label>
+                        <input type="text" id="txtTitle" class="form-control" formControlName="title"
+                            placeholder="Enter Title" />
+                        <div class="error"
+                            *ngIf="GalleryImage.controls['title'].invalid && GalleryImage.controls['title'].touched || isTitleError">
+                            <div *ngIf="GalleryImage.controls['title'].hasError('required')">Please enter title</div>
+                        </div>
+                    </div>
+                    <!-- Tag input -->
+                    <div class="form-outline mb-4">
+                        <label class="form-label fw-bold" for="txtTag">Tag</label>
+                        <div class="input-group">
+                            <input type="text" id="txtTag" #hashtagsInput class="form-control" formControlName="tag"
+                                (keyup.enter)="addHashtag()" [(ngModel)]="currentTag" autocomplete="off"
+                                placeholder="Enter Tag and press Enter" />
+                        </div>
+                        <div class="tag-container mt-2">
+                            <span *ngFor="let tag of tagArray" class="tag" (click)="removeHashtag(tag)">
+                                {{ tag }}
+                            </span>
+                        </div>
+                        <div class="error" *ngIf="isTagError">Please enter defferent tag</div>
+                    </div>
+                    <!-- Image Upload -->
+                    <div class="form-outline mb-4">
+                        <label class="form-label fw-bold required">Image</label>
+                        <div class="custom-file">
+                            <div id="upload-container" *ngIf="!imageSrc">
+                                <label for="file-input" id="lblCloudIcon">
+                                    <i class="fa fa-cloud-upload"></i>
+                                </label>
+                                <input type="file" id="file-input" accept=".png, .jpg, .jpeg"
+                                    (change)="selectFile($event)" />
+                                <div id="upload-text">Click to select an image</div>
+                            </div>
+                            <div class="imgage-preview" *ngIf="imageSrc">
+                                <div class="d-flex justify-content-center position-relative">
+                                    <img id="imgPreview" [src]="imageSrc" *ngIf="imageSrc" class="img-fluid" />
+                                    <button id="btnRemove" type="button" class="btn btn-close position-absolute"
+                                        (click)="removeImage()"></button>
+                                </div>
+                                <div id="progress-container" class="mt-4" *ngIf="progress">
+                                    <div id="progress-bar" [style.width]="progress">{{progress}}</div>
+                                </div>
+                            </div>
+                            <div class="error" *ngIf="isPathError">Please select image</div>
+                            <div class="error" *ngIf="isUploadError">Image size must be less than 20MB</div>
+                            <div class="error" *ngIf="isImageTypeError">Format allow only "jpg/png/jpeg"</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button type="button" id="btnPopupClose" class="btn btn-secondary" data-bs-dismiss="modal"
+                    (click)="closeModal()">Close</button>
+                <div class="form-group">
+                    <button type="button" id="btnSave" class="btn btn-primary" (click)="ngSubmit()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
