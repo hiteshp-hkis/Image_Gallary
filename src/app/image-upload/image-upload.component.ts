@@ -284,17 +284,18 @@ export class ImageUploadComponent {
 
             // Filter the image list based on title and tag matches
             this.imageList = Object.values(this.imageListObject).filter((item: any) =>
-              item.title.toLowerCase().includes(event.target.value) || item.tag.some((tag: any) =>
+              item.title.toLowerCase().includes(event.target.value) || item.tag?.some((tag: any) =>
                 tag.toLowerCase().includes(event.target.value)
               )
             );
 
             // Update Masonry layout after filtering
-            this.masonry.layout();
+            this.masonry?.layout();
           }
 
         });
       } else {
+        this.isLoader = false;
         this.isRecord = false;
         this.imageList = this.galleryList;
       }

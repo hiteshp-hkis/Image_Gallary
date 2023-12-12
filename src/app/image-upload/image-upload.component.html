@@ -30,7 +30,7 @@
         </div>
 
         <!-- No Rocords Found Message-->
-        <div *ngIf="isRecord">
+        <div *ngIf="isRecord || imageList.length==0">
             <div class="empty-state">
                 <div class="empty-state__content">
                     <div class="empty-state__icon">
