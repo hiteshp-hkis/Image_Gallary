@@ -1,8 +1,8 @@
 <section class="gradient-custom">
-    <div class="container py-5 h-100">
+    <div class="container py-5 h-100 search-section">
 
         <!-- Search by image title or tag -->
-        <div class="input-group mb-4 searchFilter">
+        <div class="input-group mb-0 searchFilter">
             <input type="text" id="txtSearch" class="form-control" placeholder="Search by image title or tag"
                 (keyup)="searchFilter($event)">
             <div class="input-group-append">
@@ -19,18 +19,17 @@
         </div>
 
         <!-- Display Image Grid-->
-        <div *ngIf="!isRecord && !isLoader">
-            <ngx-masonry [options]="masonryOptions" [updateLayout]="imageList" class="gallery-content" infiniteScroll
-                [infiniteScrollThrottle]="50" [infiniteScrollDistance]="2" (scrolled)="onScroll()"
-                [scrollWindow]="false" [ordered]="true">
+        <div *ngIf="!isRecord && !isLoader" class="filtered_images" [infiniteScrollThrottle]="50"
+            [infiniteScrollDistance]="2" infiniteScroll (scrolled)="onScroll()" [scrollWindow]="false">
+            <ngx-masonry [options]="masonryOptions" [updateLayout]="imageList" class="gallery-content" [ordered]="true">
                 <div ngxMasonryItem class="masonry-item" *ngFor="let item of imageList">
-                    <img src="{{item.path}}" [width]='250' title="{{item.title}}">
+                    <img src="{{item.path}}" [width]='250' title="{{item.title}} : {{item.tag}}">
                 </div>
             </ngx-masonry>
         </div>
 
         <!-- No Rocords Found Message-->
-        <div *ngIf="isRecord || imageList.length==0">
+        <div *ngIf="isRecord || (imageList?.length==0) && !isLoader" class="noRecordFound">
             <div class="empty-state">
                 <div class="empty-state__content">
                     <div class="empty-state__icon">

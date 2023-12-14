@@ -61,6 +61,7 @@ export class ImageUploadComponent {
 
   // Variables for managing the application, image list, pagination, form group, gallery list, loading status, and records
   private app: any; // Reference to the application
+  public database: any;
   public imageList: any; // List of images
   public pageNumber: number = 0; // Current page number for pagination
   public imageListObject: any; // Object containing image list information
@@ -79,15 +80,16 @@ export class ImageUploadComponent {
       'path': ['', [Validators.required]],
       'date': ['']
     });
+
+    this.app = firebase.initializeApp(environment.firebaseConfig);
+    this.database = getDatabase(this.app);
   }
 
   // Lifecycle hook: ngOnInit - Called when the component is initialized
   async ngOnInit() {
     this.isLoader = true;
-    this.app = firebase.initializeApp(environment.firebaseConfig);
-    var db1 = getDatabase(this.app);
     this.pageNumber++;
-    const starCountRef = query(ref(db1, 'Gallery'), limitToLast(this.pageNumber * 10));
+    const starCountRef = query(ref(this.database, 'Gallery'), limitToLast(this.pageNumber * 15));
     onValue(starCountRef, (snapshot) => {
       this.isLoader = false;
       this.imageListObject = snapshot.val();
@@ -116,11 +118,8 @@ export class ImageUploadComponent {
   // Event handler: onScroll - Called when a scrolling event occurs
   public onScroll() {
     this.pageNumber++;
-    this.app = firebase.initializeApp(environment.firebaseConfig);
-    var db1 = getDatabase(this.app);
-    const starCountRef = query(ref(db1, 'Gallery'), limitToLast(this.pageNumber * 10));
+    const starCountRef = query(ref(this.database, 'Gallery'), limitToLast(this.pageNumber * 15));
     onValue(starCountRef, (snapshot) => {
-      debugger
       this.imageListObject = snapshot.val();
       var newImageList = Object.values(this.imageListObject).reverse();
       var newList: any[] = [];
@@ -134,7 +133,7 @@ export class ImageUploadComponent {
         return i == a.indexOf(itm);
       });
 
-      this.galleryList = Object.values(this.imageListObject);
+      this.galleryList = Object.values(this.imageListObject).reverse();
       this.masonry.layout();
     });
   }
@@ -248,12 +247,14 @@ export class ImageUploadComponent {
 
   // Function: removeImage - Clears the image source to remove the displayed image
   removeImage() {
+    this.selectedFiles = '';
     this.imageSrc = '';
   }
 
   // Function: searchFilter - Handles filtering of images based on search input
   public searchFilter(event: any) {
-    this.isLoader = true;
+    this.isRecord = false;
+
     // Clear existing timeout to prevent rapid consecutive searches
     if (this.timeout !== null) {
       clearTimeout(this.timeout);
@@ -263,12 +264,10 @@ export class ImageUploadComponent {
     this.timeout = setTimeout(() => {
       // Check if the search input is valid and meets the minimum length requirement
       if (event.target.value != "" && event.target.value != null && event.target.value.length >= 3) {
-        // Initialize Firebase app and set up a connection to the database
-        this.app = firebase.initializeApp(environment.firebaseConfig);
-        var db1 = getDatabase(this.app);
-
+        this.isLoader = true;
+        this.isRecord = false;
         // Create a query for retrieving data from the 'Gallery' node in the database
-        const starCountRef = query(ref(db1, 'Gallery'));
+        const starCountRef = query(ref(this.database, 'Gallery'));
 
         // Listen for changes in the database and filter the image list accordingly
         onValue(starCountRef, (snapshot) => {
@@ -276,18 +275,18 @@ export class ImageUploadComponent {
 
           // Check if there are no records in the database
           if (this.imageListObject == null) {
-            this.isRecord = true;
             this.isLoader = false;
+            this.isRecord = true;
           } else {
             this.isLoader = false;
             this.isRecord = false;
-
             // Filter the image list based on title and tag matches
-            this.imageList = Object.values(this.imageListObject).filter((item: any) =>
-              item.title.toLowerCase().includes(event.target.value) || item.tag?.some((tag: any) =>
-                tag.toLowerCase().includes(event.target.value)
+            var searchedData = Object.values(this.imageListObject).filter((item: any) =>
+              item.title.toLowerCase().includes(event.target.value.toLowerCase()) || item.tag?.some((tag: any) =>
+                tag.toLowerCase().includes(event.target.value.toLowerCase())
               )
             );
+            this.imageList = searchedData.reverse();
 
             // Update Masonry layout after filtering
             this.masonry?.layout();
@@ -299,7 +298,7 @@ export class ImageUploadComponent {
         this.isRecord = false;
         this.imageList = this.galleryList;
       }
-    }, 2000); // Set a delay of 3000 milliseconds (3 seconds) before executing the search
+    }, 2000); // Set a delay of 2000 milliseconds (2 seconds) before executing the search
   }
 
   // Function: selectFile - Handles the selection of a file and validates its size and type
@@ -320,7 +319,11 @@ export class ImageUploadComponent {
           this.isPathError = false;
           reader.readAsDataURL(file);
           reader.onload = () => {
-            this.selectedFiles = file;
+            this.selectedFiles = new Blob([file], { type: file.type });
+            const timestamp = new Date().getTime();
+            const random = Math.floor(Math.random() * 1000);
+            const fileName = `image_${timestamp}_${random}.${file.name.split('.').pop()}`; //Create new image file name
+            this.selectedFiles.name = fileName;
             this.imageSrc = reader.result as string;
           }
         }
@@ -352,6 +355,7 @@ export class ImageUploadComponent {
         this.GalleryImage.reset();
         this.GalleryImage.controls['tag'].setValue('');
         jQuery(".btn-close").click(); // Close the modal using jQuery
+        this.imageList = this.galleryList;
       },
         (error) => {
           // Set the save error flag if there is an error during the POST request
