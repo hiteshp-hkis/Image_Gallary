@@ -23,7 +23,7 @@
             [infiniteScrollDistance]="2" infiniteScroll (scrolled)="onScroll()" [scrollWindow]="false">
             <ngx-masonry [options]="masonryOptions" [updateLayout]="imageList" class="gallery-content" [ordered]="true">
                 <div ngxMasonryItem class="masonry-item" *ngFor="let item of imageList">
-                    <img src="{{item.path}}" [width]='250' title="{{item.title}} : {{item.tag}}">
+                    <img src="{{item.path}}" [width]='250' title="{{item.title}}">
                 </div>
             </ngx-masonry>
         </div>
